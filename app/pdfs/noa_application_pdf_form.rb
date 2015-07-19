@@ -7,7 +7,7 @@ class NoaApplicationPDFForm < FillablePdfForm
   protected
 
   def fill_out
-    fill :date, Date.today.to_s
+    fill :date, Date.today.to_s.gsub(/\//, '')
     [:sin, :first_name, :last_name, :dob].each do |field|
       fill field, @noa_application.send(field)
     end

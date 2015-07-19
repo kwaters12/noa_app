@@ -5,7 +5,7 @@ class NoaApplication < ActiveRecord::Base
   after_save :generate_noa_application
 
   serialize :notification_params, Hash
-  
+
   def paypal_url(return_path)
     values = {
         business: "kellywaters-facilitator@gmail.com",
@@ -24,5 +24,12 @@ class NoaApplication < ActiveRecord::Base
 
   def generate_noa_application
     pdf_path = NoaApplicationPDFForm.new(self).export
+
+    # @client = Dropbox::API::Client.new(:token  => ENV['DROPBOX_APP_KEY'], :secret => ENV['DROPBOX_APP_SECRET'])
+    # # The file is a Dropbox::API::File object, so you can call methods on it!
+    # @client.search('test.txt').each do |file|
+    #   file.copy(file.path + ".old2")
+    # end
   end
+
 end

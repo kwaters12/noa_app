@@ -8,3 +8,6 @@
   .col-md-6
     .btn.btn-default
       = link_to "Members Signup", new_user_registration_path(@user)
+
+  %hr
+  = link_to "Authenticate Dropbox", dropbox_auth_path, class: 'btn btn-default'

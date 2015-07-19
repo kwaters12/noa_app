@@ -15,6 +15,8 @@ gem 'momentjs-rails'
 gem 'bootstrap3-datetimepicker-rails', '~> 4.14.30'
 gem 'pdf-forms'
 gem 'rails_admin'
+gem 'dropbox-api'
+gem 'paperclip'
 
 # Bundle edge Rails instead: gem 'rails', github: 'rails/rails'
 gem 'rails', '4.2.0'
