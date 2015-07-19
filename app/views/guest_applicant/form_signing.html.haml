@@ -1,0 +1,4 @@
+= simple_form_for @client, url: wizard_path, method: :patch do |f|
+  %h1 PLACE PDF HERE
+  = f.submit "Pay With Paypal", class: 'btn btn-default'
+  = link_to 'Pay With Credit Card', wizard_path(:payment_activemerchant), class: 'btn btn-default'

@@ -1,0 +1,26 @@
+= simple_form_for @noa_application do |f|  
+  
+  %h2 Client Info
+  .row
+    .col-md-4
+      / = @noa_application.first_name
+      = f.input :first_name, input_html: { class: 'form-control' }
+    .col-md-4
+      = f.input :last_name, input_html: { class: 'form-control' }
+  .row
+    .col-md-4
+      = f.input :phone_num, input_html: { class: 'form-control' }
+    .col-md-4
+      = f.input :email, input_html: { class: 'form-control' }
+    .col-md-4
+      = f.input :sin, input_html: { class: 'form-control' }
+    .col-md-4
+      = f.input :dob, input_html: { class: 'form-control' }
+    .col-md-4
+      = f.input :noa_selection, collection: ["NOA 2 yrs. plus stmt.", "NOA 3 yrs. plus stmt.", "NOA 4 yrs. plus stmt."], input_html: { class: 'form-control' }
+    / .col-md-4
+    /   = f.input :hassignature
+    .col-md-4
+      = f.submit "Pay with Paypal", name: 'payment_method', value: 'Paypal', input_html: { class: 'form-control' }
+      = f.submit "Pay with Credit Card", name: 'payment_method', value: 'Credit Card', input_html: { class: 'form-control' }
+

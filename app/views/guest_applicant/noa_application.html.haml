@@ -1,0 +1,10 @@
+= simple_form_for @client, url: wizard_path, method: :patch do |f|
+  .col-md-6.col-md-offset-3
+    .text-center
+      %hr
+      %h3 Final Info and Payment Info
+      %hr
+      = f.input :sin
+      = f.input :dob
+      = f.hidden_field :id unless @client.nil?
+      = f.submit "Continue",  class: 'btn btn-default'

@@ -1,0 +1,20 @@
+%nav.navbar.navbar-default
+  .navbar-header
+    %a.navbar-brand{href: root_url} NOA App
+  #name
+    %p
+      - if user_signed_in? 
+        = link_to current_user.name_display, edit_user_registration_path 
+        |
+        = link_to "Sign Out", destroy_user_session_path, method: :delete 
+        |
+        / = link_to "Tip Us", new_tip_path
+      - else 
+        = link_to "Register", new_user_registration_path 
+        |
+        = link_to "Sign In", new_user_session_path 
+        |
+        / = link_to "Tip Us", new_tip_path
+        / |
+        / = link_to "Sign in With Google",
+        /   user_omniauth_authorize_path(:google_oauth2)

@@ -1,0 +1,10 @@
+%h1 Welcome to NOA App
+
+.col-md-12.text-center
+  .col-md-6
+    .btn.btn-default
+      / = link_to "Guest Applicant", guest_applicant_path(:personal_info)
+      = link_to "Guest Applicant", new_client_path
+  .col-md-6
+    .btn.btn-default
+      = link_to "Members Signup", new_user_registration_path(@user)
