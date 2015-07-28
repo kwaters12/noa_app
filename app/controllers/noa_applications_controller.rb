@@ -39,10 +39,10 @@ class NoaApplicationsController < ApplicationController
     else
       @client = Client.new client_params
       @client.save
-      
-
       @noa_application = @client.noa_applications.new(document_params)
       if @noa_application.save
+        
+
         redirect_to root_url, notice: "Thank You!"
       else
         flash.now[:error] = "Sorry, your application was not saved"

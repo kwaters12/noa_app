@@ -15,7 +15,8 @@ Rails.application.routes.draw do
   post '/noa_applications/:id' => 'noa_applications#show'
   post '/hook' => 'noa_applications#hook'
 
-  get 'dropbox_auth', to: 'oauth#authenticate_dropbox'
+  get '/dropbox/authorize' => 'dropbox#authorize', as: 'dropbox_auth'
+  get '/dropbox/callback' => 'dropbox#callback', as: 'dropbox_callback'
 
   root "home#index"
   # The priority is based upon order of creation: first created -> highest priority.

@@ -1,13 +1,20 @@
-%h1 Welcome to NOA App
+.landing-page
+  .text-center.headline
+    %h1 Welcome to NOA App
 
-.col-md-12.text-center
-  .col-md-6
-    .btn.btn-default
-      / = link_to "Guest Applicant", guest_applicant_path(:personal_info)
-      = link_to "Guest Applicant", new_client_path
-  .col-md-6
-    .btn.btn-default
-      = link_to "Members Signup", new_user_registration_path(@user)
+    
+  .col-md-12.text-center.cta
+    .col-md-5.col-md-offset-1
+      .cta-selection
+        %h3 Use our simple online application process, and receive your past 3 years' <strong>Notices of Assessment</strong>
+        / %h3 <strong>$60</strong>
+        .btn.btn-default
+          / = link_to "Guest Applicant", guest_applicant_path(:personal_info)
+          = link_to "Guest Applicant", new_client_path
+    .col-md-5   
+      .cta-selection
+        %h3 Sign up as a <strong>Mortgage Broker</strong>, <strong>Mutual Fund Licenser</strong>, <strong>Life Insurance Licenser</strong> or <strong>Accountant</strong> 
+        / %h3 <strong>$50</strong>
+        .btn.btn-default
+          = link_to "Members Signup", new_user_registration_path(@user)
 
-  %hr
-  = link_to "Authenticate Dropbox", dropbox_auth_path, class: 'btn btn-default'

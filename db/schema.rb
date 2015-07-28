@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20150719204533) do
+ActiveRecord::Schema.define(version: 20150719210546) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -51,6 +51,16 @@ ActiveRecord::Schema.define(version: 20150719204533) do
   end
 
   add_index "clients", ["broker_id"], name: "index_clients_on_broker_id", using: :btree
+
+  create_table "dropbox_files", force: :cascade do |t|
+    t.string   "document_file_name"
+    t.string   "document_content_type"
+    t.integer  "document_file_size"
+    t.datetime "document_updated_at"
+    t.string   "url"
+    t.datetime "created_at",            null: false
+    t.datetime "updated_at",            null: false
+  end
 
   create_table "noa_applications", force: :cascade do |t|
     t.string   "broker_first_name"

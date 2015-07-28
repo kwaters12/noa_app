@@ -1,3 +1,4 @@
+require 'dropbox_sdk'
 class NoaApplication < ActiveRecord::Base
   belongs_to :client
   belongs_to :broker
@@ -25,11 +26,40 @@ class NoaApplication < ActiveRecord::Base
   def generate_noa_application
     pdf_path = NoaApplicationPDFForm.new(self).export
 
-    # @client = Dropbox::API::Client.new(:token  => ENV['DROPBOX_APP_KEY'], :secret => ENV['DROPBOX_APP_SECRET'])
-    # # The file is a Dropbox::API::File object, so you can call methods on it!
-    # @client.search('test.txt').each do |file|
-    #   file.copy(file.path + ".old2")
-    # end
+    @dropbox_client = DropboxClient.new('fOObVAMBomkAAAAAAAAAWHCIPbIWTv7bwD3nHivV2EXLwV0WgKCJRYK9ykrWo8Ru')
+
+    folder = @dropbox_client.search('/', folder_name)
+    if folder
+      move_pdf(pdf_path)
+      send_link
+    else
+      @dropbox_client.file_create_folder(folder_name)
+
+      move_pdf(pdf_path)
+      send_link
+   
+    end
+
+   
+    File.delete(pdf_path)
+  end
+
+  def folder_name
+    self.sin + ' ' + self.last_name + ', ' + self.first_name
+  end
+
+  def file_name
+    self.sin + ' ' + self.last_name + ', ' + self.first_name + ' ' + Date.today.to_s +  '.pdf'
+  end
+
+  def move_pdf(pdf_path)
+    @dropbox_client.put_file('/' + folder_name + '/' + file_name, open(pdf_path), overwrite=true)
+  end
+
+  def send_link
+    shareable = @dropbox_client.shares(folder_name + '/' + file_name)
+    @client = Client.find(self.client_id)
+    ClientMailer.dropbox_link(@client, shareable['url']).deliver_now
   end
 
 end

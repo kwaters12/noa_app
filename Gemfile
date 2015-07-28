@@ -17,6 +17,10 @@ gem 'pdf-forms'
 gem 'rails_admin'
 gem 'dropbox-api'
 gem 'paperclip'
+gem 'dropbox-sdk'
+
+#Action Mailer
+gem 'letter_opener', :group => :development
 
 # Bundle edge Rails instead: gem 'rails', github: 'rails/rails'
 gem 'rails', '4.2.0'
