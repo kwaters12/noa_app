@@ -18,6 +18,7 @@ gem 'rails_admin'
 gem 'dropbox-api'
 gem 'paperclip'
 gem 'dropbox-sdk'
+gem 'rails_12factor'
 
 #Action Mailer
 gem 'letter_opener', :group => :development
