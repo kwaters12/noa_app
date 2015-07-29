@@ -16,12 +16,20 @@ class ClientsController < ApplicationController
   def create   
       @client = Client.new(client_params)
       @noa_application = @client.noa_applications.new(noa_application_params)
+      @noa_application.client_id = @client.id
+
       if @client.save && @noa_application.save
-        redirect_to new_noa_application_path(:noa_application_id => @noa_application), notice: "Thank You!"
+        respond_to do |format|
+          format.html { redirect_to noa_application_path(@noa_application), notice: "Thank You!" }
+          format.js
+          format.json  { render json: @client.to_json(include: @noa_application) }   
+        end     
       else
         flash.now[:error] = "Sorry, your application was not saved"
         render :new
       end
+
+
     
   end
 
@@ -61,7 +69,7 @@ class ClientsController < ApplicationController
   end
 
   def noa_application_params
-    params.require(:client).permit([:first_name, :last_name, :sin, :dob, :email, :phone_num, :broker_id])  
+    params.require(:client).permit([:first_name, :last_name, :sin, :dob, :email, :phone_num, :broker_id, :client_id])  
   end
 
 end

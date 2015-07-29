@@ -19,7 +19,7 @@ class NoaApplicationsController < ApplicationController
   def create
     if user_signed_in?
       @broker = current_user
-      # @client Client.find(params[:sin])
+      @client = Client.find(params[:client_id])
       if !@client
         @client = Client.new client_params
         configure_client(@client)
@@ -27,10 +27,14 @@ class NoaApplicationsController < ApplicationController
       
       @client.broker_id = @broker.id
       @noa_application = @broker.noa_applications.new(document_params)
-      @noa_application.client_id = @client.id
       if @noa_application.save
+        respond_to do |format|
+          format.html { redirect_to @noa_application.paypal_url(noa_application_path(@noa_application, :format => 'pdf')) }
+          format.js
+          format.json  { render json: @client.to_json(include: @noa_application) }   
+        end 
         #redirect_to root_url, notice: "Thank You!"
-        redirect_to @noa_application.paypal_url(noa_application_path(@noa_application, :format => 'pdf'))
+        
       else
         flash.now[:error] = "Sorry, your application was not saved"
         render :new
@@ -40,8 +44,7 @@ class NoaApplicationsController < ApplicationController
       @client = Client.new client_params
       @client.save
       @noa_application = @client.noa_applications.new(document_params)
-      if @noa_application.save
-        
+      if @noa_application.save       
 
         redirect_to root_url, notice: "Thank You!"
       else
@@ -50,6 +53,8 @@ class NoaApplicationsController < ApplicationController
       end
 
     end
+
+
   end
 
   def edit
@@ -79,11 +84,18 @@ class NoaApplicationsController < ApplicationController
 
   def show
     @noa_application = NoaApplication.find(params[:id])
+    @client = Client.find(@noa_application.client_id)
+    @pdf_path = P
     respond_to do |format|
-      format.pdf { send_file TestPdfForm.new(@noa_application).export, type: 'application/pdf'}
+      format.pdf { send_file NoaApplicationPDFForm.new(@noa_application).export, type: 'application/pdf'}
       format.html { noa_application_path(@noa_application) }
+      format.json { render json: @client.to_json(include: @noa_application) } 
     end
+    attach_docusign_signature(@noa_application)
+    
   end
+
+  
 
   def hook
     params.permit!
@@ -94,9 +106,6 @@ class NoaApplicationsController < ApplicationController
     end
     render nothing: true
   end
-
-  
-
 
   private
 
@@ -109,11 +118,105 @@ class NoaApplicationsController < ApplicationController
 
   end
 
+  def generate_noa_application(self)
+    self.pdf_path = NoaApplicationPDFForm.new(self).export
+
+    @dropbox_client = DropboxClient.new('fOObVAMBomkAAAAAAAAAWHCIPbIWTv7bwD3nHivV2EXLwV0WgKCJRYK9ykrWo8Ru')
+
+    folder = @dropbox_client.search('/', folder_name)
+    if folder
+      move_pdf(pdf_path)
+      send_link
+    else
+      @dropbox_client.file_create_folder(folder_name)
+
+      move_pdf(pdf_path)
+      send_link
+   
+    end
+    self.save
+
+   
+    File.delete(pdf_path)
+  end
+
   def handle_payment(payment_method, noa_application)
     if payment_method === 'Paypal'
       redirect_to noa_application.paypal_url(noa_application_path(noa_application))
     else
       redirect_to noa_application_path(noa_application)
+    end
+  end
+
+  def attach_docusign_signature(output_path, noa_application)
+    docusign = DocusignRest::Client.new
+    document_envelope_response = docusign.create_envelope_from_document(
+      email: {
+        subject: "test email subject",
+        body: "this is the email body and it's large!"
+      },
+      # If embedded is set to true  in the signers array below, emails
+      # don't go out to the signers and you can embed the signature page in an 
+      # iFrame by using the client.get_recipient_view method
+      signers: [
+        {
+          embedded: true,
+          name: noa_application.first_name + ' ' + noa_application.last_name,
+          email: noa_application.email,
+          role_name: 'noa_application',
+          sign_here_tabs: [
+            {
+              anchor_string: 'print_name',
+              anchor_x_offset: '140',
+              anchor_y_offset: '8'
+            }
+          ]
+        },
+        {
+          embedded: true,
+          name: noa_application.first_name + ' ' + noa_application.last_name,
+          email: noa_application.email,
+          role_name: 'noa_application',
+          sign_here_tabs: [
+            {
+              anchor_string: 'signature',
+              anchor_x_offset: '140',
+              anchor_y_offset: '8'
+            }
+          ]
+        }
+      ],
+      files: [
+        {path: output_path, name: 'noa_application_pdf_form.pdf'},
+      ],
+      status: 'sent'
+    )
+    noa_application.get_document_from_envelope(
+      envelope_id: @envelope_response["envelopeId"],
+      document_id: @noa_application.id,
+      local_save_path: "#{Rails.root}/tmp/pdfs/#{SecureRandom.uuid}.pdf')}"
+    )
+
+    @url = docusign.get_recipient_view(
+      envelope_id: document_envelope_response["envelopeId"],
+      name: noa_application.display_name,
+      email: noa_application.email,
+      return_url: "http://localhost:3000/docusign_response"
+    )
+    Rails.logger.info("$$$$$$$$$$$$$$$$$$$$")
+    Rails.logger.info(@url)
+    Rails.logger.info("$$$$$$$$$$$$$$$$$$$$")
+  end
+
+  def docusign_response
+    utility = DocusignRest::Utility.new
+
+    if params[:event] == "signing_complete"
+      flash[:notice] = "Thanks! Successfully signed"
+      render :text => utility.breakout_path(noa_application_path(self)), content_type: 'text/html'
+    else
+      flash[:notice] = "You chose not to sign the document."
+      render :text => utility.breakout_path(root_url), content_type: 'text/html'
     end
   end
 
