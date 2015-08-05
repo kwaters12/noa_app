@@ -1,0 +1,39 @@
+/ = simple_form_for(resource, as: resource_name, url: registration_path(resource_name)) do |f| 
+/   = devise_error_messages!
+
+/   .col-md-6.col-md-offset-3
+/     .text-left.guest-form
+/       .headline.text-center
+/         %h1 Member Sign-Up
+/       .text-right
+/         * All Fields Required
+/       .col-md-12.form-group 
+/         = f.input :type, priority: ["Mortgage Broker"], collection: ["Mortgage Broker", "Mutual Fund License", "Life Insurance License", "Accountant"], input_html: { class: 'form-control' }, label: 'What is Your Profession?', selected: 'Mortgage Broker'
+/       .col-md-6.form-group 
+/         = f.autocomplete_field :brokerage, autocomplete_brokerage_name_registrations_path
+/       .col-md-6.form-group 
+/         = f.input :first_name, input_html: { class: 'form-control' }, label: 'First Name'  
+/       .col-md-6.form-group   
+/         = f.input :last_name, input_html: { class: 'form-control' }, label: 'Last Name'
+/       .col-md-6.form-group   
+/         = f.input :email, input_html: { class: 'form-control' }, label:  'Email Address'
+/       .col-md-6.form-group   
+/         = f.input :phone_number, input_html: { class: 'form-control' }, label: 'Phone Number'
+/       .col-md-6.form-group
+/         = f.input :password, required: true, hint: ("#{@minimum_password_length} characters minimum" if @validatable), input_html: { class: 'form-control' } 
+/       .col-md-6.form-group
+/         = f.input :password_confirmation, required: true, input_html: { class: 'form-control' }
+
+/       - @brokerages.each do |brokerage|
+/         :javascript
+/           $(document).ready( function() {
+/              var brokerage = "#{brokerage.name}";
+/              console.log(brokerage);
+/           } );
+/         = brokerage.name
+/       .form-actions
+/         = f.button :submit, "Sign up" 
+
+
+ 
+/   

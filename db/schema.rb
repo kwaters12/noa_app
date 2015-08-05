@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20150719210546) do
+ActiveRecord::Schema.define(version: 20150803164444) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -48,6 +48,7 @@ ActiveRecord::Schema.define(version: 20150719210546) do
     t.integer  "broker_id"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string   "pdf_path"
   end
 
   add_index "clients", ["broker_id"], name: "index_clients_on_broker_id", using: :btree
@@ -91,6 +92,8 @@ ActiveRecord::Schema.define(version: 20150719210546) do
     t.string   "status"
     t.datetime "purchased_at"
     t.string   "transaction_id"
+    t.string   "pdf_path"
+    t.string   "docusign_url"
   end
 
   add_index "noa_applications", ["broker_id"], name: "index_noa_applications_on_broker_id", using: :btree
@@ -144,10 +147,17 @@ ActiveRecord::Schema.define(version: 20150719210546) do
     t.string   "document_content_type"
     t.integer  "document_file_size"
     t.datetime "document_updated_at"
+    t.string   "broker_type"
+    t.integer  "brokerage_id"
+    t.integer  "sub_brokerage_id"
   end
 
+  add_index "users", ["brokerage_id"], name: "index_users_on_brokerage_id", using: :btree
   add_index "users", ["email"], name: "index_users_on_email", unique: true, using: :btree
   add_index "users", ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true, using: :btree
+  add_index "users", ["sub_brokerage_id"], name: "index_users_on_sub_brokerage_id", using: :btree
 
   add_foreign_key "noa_applications", "brokers"
+  add_foreign_key "users", "brokerages"
+  add_foreign_key "users", "sub_brokerages"
 end

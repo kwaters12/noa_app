@@ -1,8 +1,6 @@
 class NoaApplicationsController < ApplicationController
   protect_from_forgery except: [:hook]
   
-
-
   def index
     @noa_applications = NoaApplication.all
 
@@ -28,6 +26,8 @@ class NoaApplicationsController < ApplicationController
       @client.broker_id = @broker.id
       @noa_application = @broker.noa_applications.new(document_params)
       if @noa_application.save
+
+        # generate_noa_application(@noa_application)
         respond_to do |format|
           format.html { redirect_to @noa_application.paypal_url(noa_application_path(@noa_application, :format => 'pdf')) }
           format.js
@@ -45,7 +45,7 @@ class NoaApplicationsController < ApplicationController
       @client.save
       @noa_application = @client.noa_applications.new(document_params)
       if @noa_application.save       
-
+        # generate_noa_application(@noa_application)
         redirect_to root_url, notice: "Thank You!"
       else
         flash.now[:error] = "Sorry, your application was not saved"
@@ -85,14 +85,20 @@ class NoaApplicationsController < ApplicationController
   def show
     @noa_application = NoaApplication.find(params[:id])
     @client = Client.find(@noa_application.client_id)
-    @pdf_path = P
     respond_to do |format|
-      format.pdf { send_file NoaApplicationPDFForm.new(@noa_application).export, type: 'application/pdf'}
+      # format.pdf { send_file NoaApplicationPDFForm.new(@noa_application).export, type: 'application/pdf'}
       format.html { noa_application_path(@noa_application) }
       format.json { render json: @client.to_json(include: @noa_application) } 
     end
-    attach_docusign_signature(@noa_application)
-    
+    Rails.logger.info("&&&&&&&&&&&&&&&&&&&&&&")
+    Rails.logger.info(@noa_application.inspect)
+    Rails.logger.info("&&&&&&&&&&&&&&&&&&&&&&")
+    if @noa_application.docusign_url.nil?
+      attach_docusign_signature(@noa_application)
+    else
+      @url = @noa_application.docusign_url
+    end
+
   end
 
   
@@ -107,107 +113,6 @@ class NoaApplicationsController < ApplicationController
     render nothing: true
   end
 
-  private
-
-  def document_params
-    params.require(:noa_application).permit([:broker_first_name, :broker_last_name, :brokerage_name, :brokerage_phone_number, :brokerage_email, :referral_first_name, :referral_last_name, :first_name, :last_name, :address, :city, :province, :postal_code, :phone_number, :email, :sin, :dob, :noa_selection, :has_signature, :status, :notification_params, :transaction_id, :purchased_at])
-  end
-
-  def client_params
-    params.require(:client).permit([:first_name, :last_name, :sin, :dob, :email, :phone_number])   
-
-  end
-
-  def generate_noa_application(self)
-    self.pdf_path = NoaApplicationPDFForm.new(self).export
-
-    @dropbox_client = DropboxClient.new('fOObVAMBomkAAAAAAAAAWHCIPbIWTv7bwD3nHivV2EXLwV0WgKCJRYK9ykrWo8Ru')
-
-    folder = @dropbox_client.search('/', folder_name)
-    if folder
-      move_pdf(pdf_path)
-      send_link
-    else
-      @dropbox_client.file_create_folder(folder_name)
-
-      move_pdf(pdf_path)
-      send_link
-   
-    end
-    self.save
-
-   
-    File.delete(pdf_path)
-  end
-
-  def handle_payment(payment_method, noa_application)
-    if payment_method === 'Paypal'
-      redirect_to noa_application.paypal_url(noa_application_path(noa_application))
-    else
-      redirect_to noa_application_path(noa_application)
-    end
-  end
-
-  def attach_docusign_signature(output_path, noa_application)
-    docusign = DocusignRest::Client.new
-    document_envelope_response = docusign.create_envelope_from_document(
-      email: {
-        subject: "test email subject",
-        body: "this is the email body and it's large!"
-      },
-      # If embedded is set to true  in the signers array below, emails
-      # don't go out to the signers and you can embed the signature page in an 
-      # iFrame by using the client.get_recipient_view method
-      signers: [
-        {
-          embedded: true,
-          name: noa_application.first_name + ' ' + noa_application.last_name,
-          email: noa_application.email,
-          role_name: 'noa_application',
-          sign_here_tabs: [
-            {
-              anchor_string: 'print_name',
-              anchor_x_offset: '140',
-              anchor_y_offset: '8'
-            }
-          ]
-        },
-        {
-          embedded: true,
-          name: noa_application.first_name + ' ' + noa_application.last_name,
-          email: noa_application.email,
-          role_name: 'noa_application',
-          sign_here_tabs: [
-            {
-              anchor_string: 'signature',
-              anchor_x_offset: '140',
-              anchor_y_offset: '8'
-            }
-          ]
-        }
-      ],
-      files: [
-        {path: output_path, name: 'noa_application_pdf_form.pdf'},
-      ],
-      status: 'sent'
-    )
-    noa_application.get_document_from_envelope(
-      envelope_id: @envelope_response["envelopeId"],
-      document_id: @noa_application.id,
-      local_save_path: "#{Rails.root}/tmp/pdfs/#{SecureRandom.uuid}.pdf')}"
-    )
-
-    @url = docusign.get_recipient_view(
-      envelope_id: document_envelope_response["envelopeId"],
-      name: noa_application.display_name,
-      email: noa_application.email,
-      return_url: "http://localhost:3000/docusign_response"
-    )
-    Rails.logger.info("$$$$$$$$$$$$$$$$$$$$")
-    Rails.logger.info(@url)
-    Rails.logger.info("$$$$$$$$$$$$$$$$$$$$")
-  end
-
   def docusign_response
     utility = DocusignRest::Utility.new
 
@@ -219,5 +124,93 @@ class NoaApplicationsController < ApplicationController
       render :text => utility.breakout_path(root_url), content_type: 'text/html'
     end
   end
+
+  private
+
+  def document_params
+    params.require(:noa_application).permit([:broker_first_name, :broker_last_name, :brokerage_name, :brokerage_phone_number, :brokerage_email, :referral_first_name, :referral_last_name, :first_name, :last_name, :address, :city, :province, :postal_code, :phone_number, :email, :sin, :dob, :noa_selection, :has_signature, :status, :notification_params, :transaction_id, :purchased_at])
+  end
+
+  def client_params
+    params.require(:client).permit([:first_name, :last_name, :sin, :dob, :email, :phone_number])   
+  end
+
+  def handle_payment(payment_method, noa_application)
+    if payment_method === 'Paypal'
+      redirect_to noa_application.paypal_url(noa_application_path(noa_application))
+    else
+      redirect_to noa_application_path(noa_application)
+    end
+  end
+
+  def attach_docusign_signature(noa_application)
+    @docusign = DocusignRest::Client.new
+    output_path = noa_application.pdf_path
+    Rails.logger.info("$$$$$$$$$$$$$$$$$$$$")
+    Rails.logger.info(output_path)
+    Rails.logger.info("$$$$$$$$$$$$$$$$$$$$")
+    document_envelope_response = @docusign.create_envelope_from_document(
+      email: {
+        subject: "test email subject",
+        body: "this is the email body and it's large!"
+      },
+      # If embedded is set to true  in the signers array below, emails
+      # don't go out to the signers and you can embed the signature page in an 
+      # iFrame by using the client.get_recipient_view method
+      signers: [
+        {
+          embedded: true,
+          name: noa_application.display_name,
+          email: noa_application.email,
+          role_name: 'noa_application',
+          sign_here_tabs: [
+            {
+              anchor_string: 'Print name of taxpayer',
+              anchor_x_offset: '140',
+              anchor_y_offset: '8'
+            },
+            {
+              anchor_string: 'Signature of taxpayer',
+              anchor_x_offset: '140',
+              anchor_y_offset: '80'
+            }
+          ]
+        }
+      ],
+      files: [
+        {path: output_path, name: 'noa_application_pdf_form.pdf'},
+      ],
+      status: 'sent'
+    )
+    
+    @docusign.get_document_from_envelope(
+      envelope_id: document_envelope_response["envelopeId"],
+      document_id: noa_application.id,
+      local_save_path: "#{Rails.root}/tmp/pdfs/#{SecureRandom.uuid}.pdf)}"
+    )
+    # Rails.logger.info("$$$$$$$$$$$$$$$$$$$$")
+    # Rails.logger.info(document_envelope_response.inspect)
+    # Rails.logger.info("$$$$$$$$$$$$$$$$$$$$")
+
+    @url = @docusign.get_recipient_view(
+      envelope_id: document_envelope_response["envelopeId"],
+      name: noa_application.display_name,
+      email: noa_application.email,
+      return_url: "http://localhost:3000/docusign_response"
+    )
+    @url.each do |key, value|
+      noa_application.docusign_url = value
+    end
+    
+    noa_application.save
+    # Rails.logger.info("$$$$$$$$$$$$$$$$$$$$")
+    # Rails.logger.info(@url[:url])
+    # Rails.logger.info("$$$$$$$$$$$$$$$$$$$$")
+    File.delete(output_path)
+
+    return @url
+  end
+
+  
 
 end

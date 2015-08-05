@@ -2,15 +2,29 @@ Rails.application.routes.draw do
 
   mount RailsAdmin::Engine => '/admin', as: 'rails_admin'
   devise_for :users, :controllers => {:registrations => 'registrations', :confirmations => 'confirmations'}
-
+  # devise_for :brokers, :skip => :sessions
   devise_scope :user do
     patch "/confirm" => "confirmations#confirm"
   end
+  # devise for :users, :skip => :registrations
+  # devise for :brokers, :skip => :sessions
+
+  # # routes for all users
+  # authenticated :user do
+  # end
+
+  # # routes only for brokers
+  # authenticated :broker, lambda {|u| u.type == 'Broker'} do
+  # end
+
 
   resources :noa_applications
   resources :clients
   resources :guest_applicant
   resources :member_signup
+  resources :brokers
+  resources :brokerages
+  resources :sub_brokerages
 
   post '/noa_applications/:id' => 'noa_applications#show'
   post '/hook' => 'noa_applications#hook'

@@ -1,0 +1,32 @@
+= simple_form_for(@broker) do |f| 
+  .col-md-6.col-md-offset-3
+    .text-left.guest-form
+      .headline.text-center
+        %h1 Member Sign-Up
+      .text-right
+        * All Fields Required
+      .col-md-12.form-group 
+        = f.input :broker_type, priority: ["Mortgage Broker"], collection: ["Mortgage Broker", "Mutual Fund License", "Life Insurance License", "Accountant"], input_html: { class: 'form-control' }, label: 'What is Your Profession?', selected: 'Mortgage Broker'
+      .col-md-6.form-group 
+        = f.input :brokerage_name, input_html: { value: '', class: 'brokerages_with_autocomplete form-control', 'data-autocompleteUrl' => brokerages_path }
+      .col-md-6.form-group 
+        = f.input :sub_brokerage_name, input_html: { value: '', class: 'sub_brokerages_with_autocomplete form-control', 'data-autocompleteUrl' => sub_brokerages_path }
+      .col-md-6.form-group 
+        = f.input :first_name, input_html: { class: 'form-control' }, label: 'First Name'  
+      .col-md-6.form-group   
+        = f.input :last_name, input_html: { class: 'form-control' }, label: 'Last Name'
+      .col-md-6.form-group   
+        = f.input :email, input_html: { class: 'form-control' }, label:  'Email Address'
+      .col-md-6.form-group   
+        = f.input :phone_number, input_html: { class: 'form-control' }, label: 'Phone Number'
+      .col-md-6.form-group
+        = f.input :password, required: true, hint: ("#{@minimum_password_length} characters minimum" if @validatable), input_html: { class: 'form-control' } 
+      .col-md-6.form-group
+        = f.input :password_confirmation, required: true, input_html: { class: 'form-control' }
+
+      .form-actions
+        = f.button :submit, "Sign up" 
+
+
+ 
+  

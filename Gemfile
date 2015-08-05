@@ -20,6 +20,9 @@ gem 'paperclip'
 gem 'dropbox-sdk'
 gem 'rails_12factor'
 gem 'docusign_rest'
+gem 'faker'
+gem 'quiet_assets'
+gem 'jquery-turbolinks'
 
 #Action Mailer
 gem 'letter_opener', :group => :development
