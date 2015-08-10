@@ -11,6 +11,11 @@ body {
   background-repeat: repeat-x;
   background-position: center 2.7em;
 }
+// .datepicker.dropdown-menu {
+//   top: 0 !important;
+//   left: 0 !important;
+//   position: relative;
+// }
 .headline {
   height: 230px;
   background: url(canada_flag.png);
@@ -149,7 +154,7 @@ label {
 .btn {
   margin: 0 auto;
   display: block;
-  margin-top: 40px;
+  margin-top: 20px;
   background-color: #146094;
   background-image: -webkit-gradient(linear,left top,left bottom,from(#146094),to(#23447e));
   background-image: -webkit-linear-gradient(#146094,#23447e);

@@ -17,7 +17,6 @@ Rails.application.routes.draw do
   # authenticated :broker, lambda {|u| u.type == 'Broker'} do
   # end
 
-
   resources :noa_applications
   resources :clients
   resources :guest_applicant
@@ -32,7 +31,7 @@ Rails.application.routes.draw do
   get '/dropbox/authorize' => 'dropbox#authorize', as: 'dropbox_auth'
   get '/dropbox/callback' => 'dropbox#callback', as: 'dropbox_callback'
 
-  get '/docusign_response' => 'noa_applications#docusign_response', as: 'docusign_response'
+  get '/docusign_response/:envelopeID(.:format)' => 'noa_applications#docusign_response', as: 'docusign_response'
 
   root "home#index"
   # The priority is based upon order of creation: first created -> highest priority.

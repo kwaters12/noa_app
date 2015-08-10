@@ -90,9 +90,7 @@ class NoaApplicationsController < ApplicationController
       format.html { noa_application_path(@noa_application) }
       format.json { render json: @client.to_json(include: @noa_application) } 
     end
-    Rails.logger.info("&&&&&&&&&&&&&&&&&&&&&&")
-    Rails.logger.info(@noa_application.inspect)
-    Rails.logger.info("&&&&&&&&&&&&&&&&&&&&&&")
+
     if @noa_application.docusign_url.nil?
       attach_docusign_signature(@noa_application)
     else
@@ -115,11 +113,13 @@ class NoaApplicationsController < ApplicationController
 
   def docusign_response
     utility = DocusignRest::Utility.new
-
+   
     if params[:event] == "signing_complete"
+      get_document(params[:envelopeID])
       flash[:notice] = "Thanks! Successfully signed"
-      render :text => utility.breakout_path(noa_application_path(self)), content_type: 'text/html'
+      render :text => utility.breakout_path(root_url), content_type: 'text/html'
     else
+      get_document(params[:envelopeID])
       flash[:notice] = "You chose not to sign the document."
       render :text => utility.breakout_path(root_url), content_type: 'text/html'
     end
@@ -146,9 +146,7 @@ class NoaApplicationsController < ApplicationController
   def attach_docusign_signature(noa_application)
     @docusign = DocusignRest::Client.new
     output_path = noa_application.pdf_path
-    Rails.logger.info("$$$$$$$$$$$$$$$$$$$$")
-    Rails.logger.info(output_path)
-    Rails.logger.info("$$$$$$$$$$$$$$$$$$$$")
+    
     document_envelope_response = @docusign.create_envelope_from_document(
       email: {
         subject: "test email subject",
@@ -182,35 +180,63 @@ class NoaApplicationsController < ApplicationController
       ],
       status: 'sent'
     )
+
     
-    @docusign.get_document_from_envelope(
-      envelope_id: document_envelope_response["envelopeId"],
-      document_id: noa_application.id,
-      local_save_path: "#{Rails.root}/tmp/pdfs/#{SecureRandom.uuid}.pdf)}"
-    )
-    # Rails.logger.info("$$$$$$$$$$$$$$$$$$$$")
-    # Rails.logger.info(document_envelope_response.inspect)
-    # Rails.logger.info("$$$$$$$$$$$$$$$$$$$$")
+    
+    # @docusign.get_document_from_envelope(
+    #   envelope_id: document_envelope_response["envelopeId"],
+    #   document_id: 1,
+    #   local_save_path: "#{Rails.root}/tmp/pdfs/#{SecureRandom.uuid}.pdf"
+    # )
+
 
     @url = @docusign.get_recipient_view(
       envelope_id: document_envelope_response["envelopeId"],
       name: noa_application.display_name,
       email: noa_application.email,
-      return_url: "http://localhost:3000/docusign_response"
+      return_url: "http://localhost:3000/docusign_response/envelopeID=" + document_envelope_response["envelopeId"]
     )
     @url.each do |key, value|
       noa_application.docusign_url = value
     end
     
     noa_application.save
-    # Rails.logger.info("$$$$$$$$$$$$$$$$$$$$")
-    # Rails.logger.info(@url[:url])
-    # Rails.logger.info("$$$$$$$$$$$$$$$$$$$$")
+
     File.delete(output_path)
 
     return @url
   end
 
+  def get_document(envelope)
+    require "net/http"
+    require "uri"
+
+    client = DocusignRest::Client.new
+    Rails.logger.info("$$$$$$$$$$$$$$$$$$$$")
+    Rails.logger.info(client.inspect)
+    Rails.logger.info("$$$$$$$$$$$$$$$$$$$$")
+
+
+    uri = URI.parse("http://" + client.endpoint + "/restapi/" + client.api_version + "/accounts/" + client.account_id + "/envelopes/" + envelope + "/documents/combined")
+
+    # Shortcut
+    response = Net::HTTP.get_response(uri)
+
+    # Will print response.body
+    Net::HTTP.get_print(uri)
+
+    # Full
+    http = Net::HTTP.new(uri.host, uri.port)
+    response = http.request(Net::HTTP::Get.new(uri.request_uri))
+    
+    # random = "#{Rails.root}/tmp/pdfs/#{SecureRandom.uuid}.pdf"
+    # client.get_document_from_envelope(
+    #   envelope_id: envelope,
+    #   document_id: 1,
+    #   local_save_path: "#{Rails.root}/tmp/pdfs/#{SecureRandom.uuid}.pdf"
+    # )
+    
+  end
   
 
 end
